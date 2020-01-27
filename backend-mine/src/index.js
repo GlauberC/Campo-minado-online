@@ -58,16 +58,20 @@ io.on("connection", socket => {
     }
   });
   socket.on("requestStartGame", data => {
-    if (connectedUsers[data]) {
+    game = {};
+    mineField = {};
+
+    if (connectedUsers[data.name]) {
       const userNotReady = Object.keys(connectedUsers).find(
         user => !connectedUsers[user].ready
       );
       if (!userNotReady) {
-        mineField = createMineField(20, 15, 8);
+        mineField = createMineField(data.numBomb, data.numLine, data.numColumn);
         game = {
           order: shuffle(Object.keys(connectedUsers)),
           turn: 0,
-          points: {}
+          points: {},
+          bombsLeft: mineField.numBomb
         };
         game.order.forEach(user => (game.points[user] = 0));
         game.playerNow = game.order[game.turn % game.order.length];
@@ -82,6 +86,11 @@ io.on("connection", socket => {
             numColumn: mineField.numColumn
           }
         });
+      } else {
+        io.to(socket.id).emit(
+          "allReadyErr",
+          "Todos os jogadores devem estar prontos para começar"
+        );
       }
     }
   });
@@ -89,6 +98,7 @@ io.on("connection", socket => {
   function pressCell(l, c, answer) {
     if (answer === "x") {
       mineField.field[l][c] = `x${game.turn % game.order.length}`;
+      game.bombsLeft--;
       game.points[game.playerNow] = game.points[game.playerNow] + 1;
     } else {
       let value;
@@ -143,13 +153,43 @@ io.on("connection", socket => {
       game.turn = game.turn + 1;
       game.playerNow = game.order[game.turn % game.order.length];
     }
+    if (game.bombsLeft === 0) {
+      let pointsWinner = 0;
+      game.order.forEach(player => {
+        if (game.points[player] > pointsWinner) {
+          pointsWinner = game.points[player];
+        }
+      });
+      let winner = game.order.filter(
+        player => game.points[player] === pointsWinner
+      );
+      io.emit("gameEnd", { winner, pointsWinner });
+    }
     io.emit("gameChange", game);
+
     console.log(game);
   });
 
+  socket.on("quitGame", data => {
+    console.log(`${data} saiu do servidor`);
+    delete connectedUsers[data];
+    socket.disconnect(true);
+    io.emit(
+      "users",
+      Object.keys(connectedUsers).map(user => connectedUsers[user])
+    );
+  });
+  socket.on("emergencyCall", data => {
+    Object.keys(connectedUsers).forEach(user => {
+      console.log(`${user} foi expulso do servidor`);
+      delete connectedUsers[user];
+      io.emit("users", []);
+    });
+  });
   socket.on("disconnect", () => {
-    if (socket.id === connectedUsers[user_name].id) {
+    if (socket.id === connectedUsers[user_name]) {
       delete connectedUsers[user_name];
+      socket.disconnect(true);
     }
   });
 });
@@ -168,5 +208,5 @@ function shuffle(arra1) {
   return arra1;
 }
 
-app.listen(3333);
-server.listen(3334);
+app.listen(4333);
+server.listen(4334);

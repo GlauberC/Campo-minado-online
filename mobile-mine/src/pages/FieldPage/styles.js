@@ -9,6 +9,30 @@ export const Container = styled.SafeAreaView`
   margin-top: 30px;
 `;
 
+export const Header = styled.View`
+  margin-bottom: 5px;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+`;
+export const PlayersScoreView = styled.View`
+  flex-direction: row;
+  width: 250px;
+  flex-wrap: wrap;
+`;
+export const InfoLabel = styled.View`
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  border-color: ${props => (props.color ? props.color : "#111")};
+  border-width: 1px;
+  padding: 3px;
+`;
+export const Label = styled.Text`
+  font-size: 16px;
+  margin-left: 3px;
+  color: ${props => (props.color ? props.color : "#111")};
+`;
 export const Field = styled.ScrollView``;
 export const Line = styled.View`
   flex-direction: row;
@@ -49,16 +73,6 @@ export const InfoTurn = styled.Text`
   margin-bottom: 20px;
   color: ${props => (props.yourTime ? "#C3000A" : "#000000")};
 `;
-export const BtnScore = styled.TouchableOpacity`
-  padding: 10px 30px;
-  border-radius: 10px;
-  elevation: 4;
-  background: #cba602;
-  margin-bottom: 10px;
-`;
-export const BtnScoreText = styled.Text`
-  font-size: 16px;
-`;
 
 export const ModalScreen = styled.Modal``;
 export const ModalView = styled.View`
@@ -66,10 +80,8 @@ export const ModalView = styled.View`
   flex: 1;
   justify-content: space-between;
   align-items: center;
+  padding: 20px;
 `;
-
-export const BackGameBtn = styled(BtnScore)``;
-export const BackGameBtnText = styled(BtnScoreText)``;
 
 export const Player = styled.View`
   margin-top: 50px;
@@ -84,4 +96,25 @@ export const PlayerName = styled.Text`
 `;
 export const PlayerPoints = styled.Text`
   font-size: 16px;
+`;
+export const WinnerMsg = styled.Text`
+  font-size: 16px;
+  margin-top: 30px;
+`;
+export const PlayerWinner = styled.Text`
+  font-size: 22px;
+`;
+export const PointsWinner = styled.Text`
+  font-size: 22px;
+`;
+export const QuitGameBtn = styled.TouchableOpacity`
+  padding: 10px 30px;
+  background: #ce6417;
+  border-radius: 20px;
+  margin-bottom: 20px;
+`;
+export const QuitGameBtnText = styled.Text`
+  font-size: 16px;
+  color: #fff;
+  text-transform: uppercase;
 `;

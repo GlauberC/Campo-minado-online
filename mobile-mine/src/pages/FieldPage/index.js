@@ -6,6 +6,10 @@ import { MaterialIcons } from "@expo/vector-icons";
 
 import {
   Container,
+  Header,
+  PlayersScoreView,
+  InfoLabel,
+  Label,
   Field,
   Line,
   CellChoice,
@@ -13,16 +17,17 @@ import {
   CellNumber,
   CellBomb,
   CellNumberText,
-  BtnScore,
-  BtnScoreText,
   ModalScreen,
   ModalView,
-  BackGameBtn,
-  BackGameBtnText,
   Player,
   PlayerName,
   PlayerPoints,
-  InfoTurn
+  InfoTurn,
+  WinnerMsg,
+  PlayerWinner,
+  PointsWinner,
+  QuitGameBtn,
+  QuitGameBtnText
 } from "./styles";
 
 export default function FieldPage({ navigation }) {
@@ -30,6 +35,8 @@ export default function FieldPage({ navigation }) {
   const [players, setPlayers] = useState({});
   const [game, setGame] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
+  const [winner, setWinner] = useState([]);
+  const [pointsWinner, setPointsWinner] = useState(0);
 
   const socket = navigation.getParam("socket");
   const nameMyUser = navigation.getParam("nameMyUser");
@@ -51,19 +58,45 @@ export default function FieldPage({ navigation }) {
   socket.on("gameChange", data => {
     setGame(data);
   });
+  socket.on("gameEnd", data => {
+    setWinner(data.winner);
+    setPointsWinner(data.pointsWinner);
+    setModalVisible(true);
+  });
 
   function clickCell(l, c) {
     if (game.playerNow === nameMyUser) {
       socket.emit("pressCellRequest", { l, c });
     }
   }
-
-  function handleModal() {
-    setModalVisible(!modalVisible);
+  function handleQuit() {
+    socket.emit("quitGame", nameMyUser);
+    navigation.navigate("EnterPage");
   }
 
   return (
     <Container>
+      <Header>
+        <PlayersScoreView>
+          {game.order &&
+            game.order.map((player, index) => (
+              <InfoLabel key={player} color={colorNumber(String(index + 1))}>
+                <Label color={colorNumber(String(index + 1))}>
+                  {player.slice(0, 3)} {game.points[player]}
+                </Label>
+                <MaterialIcons
+                  name='flag'
+                  size={16}
+                  color={colorNumber(String(index + 1))}
+                />
+              </InfoLabel>
+            ))}
+        </PlayersScoreView>
+        <InfoLabel>
+          <MaterialIcons name='brightness-high' size={16} color='#111' />
+          <Label>{game.bombsLeft}</Label>
+        </InfoLabel>
+      </Header>
       <Field refreshControl={<RefreshControl refreshing={refreshing} />}>
         {mineField.field &&
           mineField.field.map((l, indexL) => (
@@ -102,11 +135,26 @@ export default function FieldPage({ navigation }) {
       ) : (
         <InfoTurn>Vez de {game.playerNow}</InfoTurn>
       )}
-      <BtnScore onPress={handleModal}>
-        <BtnScoreText>Informações da partida</BtnScoreText>
-      </BtnScore>
+      <QuitGameBtn onPress={handleQuit}>
+        <QuitGameBtnText>Sair da partida</QuitGameBtnText>
+      </QuitGameBtn>
+
       <ModalScreen animationType='slide' visible={modalVisible}>
         <ModalView>
+          {winner.length > 0 && (
+            <>
+              <WinnerMsg>
+                {winner.map(player => (
+                  <PlayerWinner key={player}>{`${player} `}</PlayerWinner>
+                ))}
+                {winner.length > 1
+                  ? " foram os vencedores "
+                  : " foi o vencedor "}
+                com <PointsWinner>{pointsWinner}</PointsWinner> pontos
+              </WinnerMsg>
+              <WinnerMsg>Placar</WinnerMsg>
+            </>
+          )}
           <FlatList
             data={game.order}
             keyExtractor={player => player}
@@ -117,10 +165,9 @@ export default function FieldPage({ navigation }) {
               </Player>
             )}
           />
-
-          <BackGameBtn onPress={handleModal}>
-            <BackGameBtnText>Voltar para o jogo</BackGameBtnText>
-          </BackGameBtn>
+          <QuitGameBtn onPress={handleQuit}>
+            <QuitGameBtnText>Sair da partida</QuitGameBtnText>
+          </QuitGameBtn>
         </ModalView>
       </ModalScreen>
     </Container>
