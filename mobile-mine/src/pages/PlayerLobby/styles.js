@@ -45,3 +45,7 @@ export const Box = styled.TouchableOpacity`
   border-color: #21301e;
   border-width: 1px;
 `;
+export const StartButton = styled(CloseBtn)`
+  background: #21301e;
+`;
+export const StartButtonText = styled(CloseBtnText)``;

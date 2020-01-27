@@ -10,7 +10,9 @@ import {
   PlayerNumber,
   Box,
   CloseBtn,
-  CloseBtnText
+  CloseBtnText,
+  StartButton,
+  StartButtonText
 } from "./styles";
 
 export default function PlayerLobby({ navigation }) {
@@ -33,6 +35,17 @@ export default function PlayerLobby({ navigation }) {
   socket.on("disconnectPlayer", data => {
     setPlayers(data);
   });
+  socket.on("startGame", data => {
+    if (data.start) {
+      navigation.navigate("FieldPage", {
+        players,
+        socket,
+        game: data.game,
+        nameMyUser,
+        mineField: data.mineField
+      });
+    }
+  });
 
   function handleReady() {
     socket.emit("changeReady", nameMyUser);
@@ -41,6 +54,9 @@ export default function PlayerLobby({ navigation }) {
     socket.emit("disconnectPlayer", nameMyUser);
     navigation.navigate("EnterPage");
   }
+  function handleStart() {
+    socket.emit("requestStartGame", nameMyUser);
+  }
 
   return (
     <Container>
@@ -48,7 +64,7 @@ export default function PlayerLobby({ navigation }) {
         <FlatList
           data={players}
           keyExtractor={player => player.id}
-          renderItem={({ item }) => (
+          renderItem={({ item, index }) => (
             <Player>
               <PlayerName>{item.name}</PlayerName>
 
@@ -71,6 +87,11 @@ export default function PlayerLobby({ navigation }) {
         />
       </PlayersContainer>
       <PlayerNumber>{players.length} players connected</PlayerNumber>
+      {players.length > 0 && players[0].id === socket.id && (
+        <StartButton onPress={handleStart}>
+          <StartButtonText>Começar Partida</StartButtonText>
+        </StartButton>
+      )}
       <CloseBtn onPress={handleDisconnect}>
         <CloseBtnText>desconectar</CloseBtnText>
         <MaterialIcons name='close' size={25} color='#fff' />

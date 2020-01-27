@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { RefreshControl } from "react-native";
+import { RefreshControl, Text, FlatList } from "react-native";
 import colorNumber from "../../util/colorNumber";
 
 import { MaterialIcons } from "@expo/vector-icons";
@@ -12,110 +12,117 @@ import {
   CellEmpty,
   CellNumber,
   CellBomb,
-  CellNumberText
+  CellNumberText,
+  BtnScore,
+  BtnScoreText,
+  ModalScreen,
+  ModalView,
+  BackGameBtn,
+  BackGameBtnText,
+  Player,
+  PlayerName,
+  PlayerPoints,
+  InfoTurn
 } from "./styles";
 
-export default function FieldPage() {
-  const [gameField, setGameField] = useState([]);
-  const [field, setField] = useState({});
+export default function FieldPage({ navigation }) {
+  const [mineField, setMineField] = useState({});
+  const [players, setPlayers] = useState({});
+  const [game, setGame] = useState({});
+  const [modalVisible, setModalVisible] = useState(false);
 
-  useEffect(() => {
-    async function loadField() {
-      const response = await fetch("http://177.89.36.87:3333/minefield", {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          numBomb: 30,
-          numLine: 20,
-          numColumn: 9
-        })
-      });
-      const data = await response.json();
-      setGameField(data.fieldEmpty);
-      setField({
-        answer: data.field,
-        numLine: data.numLine,
-        numColumn: data.numColumn,
-        numBomb: data.numBomb
-      });
-    }
-    loadField();
-  }, []);
-
+  const socket = navigation.getParam("socket");
+  const nameMyUser = navigation.getParam("nameMyUser");
   const [refreshing, setRefreshing] = useState(false);
 
+  useEffect(() => {
+    const mine = navigation.getParam("mineField");
+    const plays = navigation.getParam("players");
+    const gameInital = navigation.getParam("game");
+
+    setGame(gameInital);
+    setMineField(mine);
+    setPlayers(plays);
+  }, []);
+
+  socket.on("getMineField", data => {
+    setMineField(data);
+  });
+  socket.on("gameChange", data => {
+    setGame(data);
+  });
+
   function clickCell(l, c) {
-    if (gameField[l][c] === "-") {
-      let gameFieldCopy = gameField;
-      const value = field.answer[l][c];
-      if (value) {
-        gameFieldCopy[l][c] = value;
-        setGameField(gameFieldCopy);
-        setRefreshing(true);
-        setTimeout(() => {
-          if (value === "/") {
-            if (l > 0) {
-              clickCell(l - 1, c);
-            }
-            if (c > 0) {
-              clickCell(l, c - 1);
-            }
-            if (l > 0 && c > 0) {
-              clickCell(l - 1, c - 1);
-            }
-            if (l < field.numLine - 1) {
-              clickCell(l + 1, c);
-            }
-            if (c < field.numColumn - 1) {
-              clickCell(l, c + 1);
-            }
-            if (c < field.numColumn - 1 && l < field.numLine - 1) {
-              clickCell(l + 1, c + 1);
-            }
-            if (l > 0 && c < field.numColumn - 1) {
-              clickCell(l - 1, c + 1);
-            }
-            if (l < field.numLine - 1 && c > 0) {
-              clickCell(l + 1, c - 1);
-            }
-          }
-          setRefreshing(false);
-        }, 10);
-      }
+    if (game.playerNow === nameMyUser) {
+      socket.emit("pressCellRequest", { l, c });
     }
+  }
+
+  function handleModal() {
+    setModalVisible(!modalVisible);
   }
 
   return (
     <Container>
       <Field refreshControl={<RefreshControl refreshing={refreshing} />}>
-        {gameField.map((l, indexL) => (
-          <Line key={indexL}>
-            {l.map((c, indexC) =>
-              c === "-" ? (
-                <CellChoice
-                  key={String(indexC)}
-                  onPress={() => clickCell(indexL, indexC)}
-                />
-              ) : c.match(/\d/) ? (
-                <CellNumber key={String(indexC)}>
-                  <CellNumberText color={colorNumber(c)}>{c}</CellNumberText>
-                </CellNumber>
-              ) : c === "/" ? (
-                <CellEmpty key={String(indexC)} />
-              ) : (
-                c === "x" && (
-                  <CellBomb key={String(indexC)}>
-                    <MaterialIcons name='flag' size={25} color='#202327' />
-                  </CellBomb>
+        {mineField.field &&
+          mineField.field.map((l, indexL) => (
+            <Line key={indexL}>
+              {l.map((c, indexC) =>
+                c === "-" ? (
+                  <CellChoice
+                    key={String(indexC)}
+                    onPress={() => clickCell(indexL, indexC)}
+                  />
+                ) : c.match(/^\d/) ? (
+                  <CellNumber key={String(indexC)}>
+                    <CellNumberText color={colorNumber(c)}>{c}</CellNumberText>
+                  </CellNumber>
+                ) : c === "/" ? (
+                  <CellEmpty key={String(indexC)} />
+                ) : (
+                  c.match(/x\d*/gi) && (
+                    <CellBomb key={String(indexC)}>
+                      <MaterialIcons
+                        name='flag'
+                        size={25}
+                        color={colorNumber(
+                          String(Number(c.replace("x", "")) + 1)
+                        )}
+                      />
+                    </CellBomb>
+                  )
                 )
-              )
-            )}
-          </Line>
-        ))}
+              )}
+            </Line>
+          ))}
       </Field>
+      {game.playerNow === nameMyUser ? (
+        <InfoTurn yourTime={true}>Sua Vez</InfoTurn>
+      ) : (
+        <InfoTurn>Vez de {game.playerNow}</InfoTurn>
+      )}
+      <BtnScore onPress={handleModal}>
+        <BtnScoreText>Informações da partida</BtnScoreText>
+      </BtnScore>
+      <ModalScreen animationType='slide' visible={modalVisible}>
+        <ModalView>
+          <FlatList
+            data={game.order}
+            keyExtractor={player => player}
+            renderItem={({ item }) => (
+              <Player>
+                <PlayerName>{item}</PlayerName>
+                <PlayerPoints>{game.points[item]}</PlayerPoints>
+              </Player>
+            )}
+          />
+
+          <BackGameBtn onPress={handleModal}>
+            <BackGameBtnText>Voltar para o jogo</BackGameBtnText>
+          </BackGameBtn>
+        </ModalView>
+      </ModalScreen>
     </Container>
   );
 }

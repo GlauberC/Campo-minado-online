@@ -9,10 +9,7 @@ export const Container = styled.SafeAreaView`
   margin-top: 30px;
 `;
 
-export const Field = styled.ScrollView`
-  border-width: 1px;
-  border-color: #202327;
-`;
+export const Field = styled.ScrollView``;
 export const Line = styled.View`
   flex-direction: row;
 `;
@@ -45,4 +42,46 @@ export const CellBomb = styled(CellNumber)`
   background: ${lighten(0.4, "#2f4bcf")};
   border-color: #202327;
   border-width: 1px;
+`;
+
+export const InfoTurn = styled.Text`
+  font-size: 16px;
+  margin-bottom: 20px;
+  color: ${props => (props.yourTime ? "#C3000A" : "#000000")};
+`;
+export const BtnScore = styled.TouchableOpacity`
+  padding: 10px 30px;
+  border-radius: 10px;
+  elevation: 4;
+  background: #cba602;
+  margin-bottom: 10px;
+`;
+export const BtnScoreText = styled.Text`
+  font-size: 16px;
+`;
+
+export const ModalScreen = styled.Modal``;
+export const ModalView = styled.View`
+  background: #e7e5e3;
+  flex: 1;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+export const BackGameBtn = styled(BtnScore)``;
+export const BackGameBtnText = styled(BtnScoreText)``;
+
+export const Player = styled.View`
+  margin-top: 50px;
+  width: 200px;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0px;
+`;
+export const PlayerName = styled.Text`
+  font-size: 16px;
+`;
+export const PlayerPoints = styled.Text`
+  font-size: 16px;
 `;

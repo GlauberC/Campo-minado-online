@@ -98,5 +98,5 @@ module.exports = (numBomb, numLine, numColumn) => {
   field = numberFill(field, numLine, numColumn);
   field = fixField(field, numLine, numColumn);
 
-  return { field, fieldEmpty, numBomb, numLine, numColumn };
+  return { fieldAnswer: field, field: fieldEmpty, numBomb, numLine, numColumn };
 };

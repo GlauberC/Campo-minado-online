@@ -29,7 +29,7 @@ export default function EnterPage({ navigation }) {
     socket.on("disconnect", () => {
       setErrMsg("Esse apelido já está em uso");
     });
-    socket.on("users", data => {
+    socket.on("connected", data => {
       navigation.navigate("PlayerLobby", {
         users: data,
         socket,
