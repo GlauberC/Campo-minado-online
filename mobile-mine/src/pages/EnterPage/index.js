@@ -21,7 +21,7 @@ export default function EnterPage({ navigation }) {
 
     // Só zerar o socket quando voltar (lembrar qual é a função que faz isso do react navigation)
     setErrMsg("");
-    let socket = io("http://177.89.36.87:4334", {
+    let socket = io("http://177.89.36.87:3334", {
       query: {
         user_name: name
       }

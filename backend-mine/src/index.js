@@ -208,5 +208,5 @@ function shuffle(arra1) {
   return arra1;
 }
 
-app.listen(4333);
-server.listen(4334);
+app.listen(3333);
+server.listen(3334);
